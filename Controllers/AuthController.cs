@@ -35,10 +35,10 @@ namespace jwt_auth.Controllers
         public async Task<ActionResult<string>> Register(UserDTO request)
         {
             
-            if (_context.Users.Where(u => u.Username == request.Username).IsNullOrEmpty())
+            if (_context.Users!.Where(u => u.Username == request.Username).IsNullOrEmpty())
             {
                 
-                CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+                CreatePasswordHash(request.Password!, out byte[] passwordHash, out byte[] passwordSalt);
                 user.Username = request.Username;
                 user.PasswordSalt = passwordSalt;
                 user.PasswordHash = passwordHash;
@@ -61,12 +61,12 @@ namespace jwt_auth.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDTO request)
         {
-            if (_context.Users.Where(u => u.Username == request.Username).IsNullOrEmpty()) return BadRequest("User not found");
+            if (_context.Users!.Where(u => u.Username == request.Username).IsNullOrEmpty()) return BadRequest("User not found");
 
-            byte[]? passwordHash = _context.Users.Single(u => u.Username == request.Username).PasswordHash;
-            byte[]? passwordSalt = _context.Users.Single(u => u.Username == request.Username).PasswordSalt;
+            byte[]? passwordHash = _context.Users!.Single(u => u.Username == request.Username).PasswordHash;
+            byte[]? passwordSalt = _context.Users!.Single(u => u.Username == request.Username).PasswordSalt;
 
-            if (!VerifyPasswordHash(request.Password, passwordHash, passwordSalt)) return BadRequest("Wrong Credentials");
+            if (!VerifyPasswordHash(request.Password!, passwordHash!, passwordSalt!)) return BadRequest("Wrong Credentials");
 
             string token = CreateToken(request);
             return Ok(token);
@@ -77,7 +77,7 @@ namespace jwt_auth.Controllers
         private string CreateToken(UserDTO request)
         {
             List<Claim> claims = new List<Claim>{
-                new Claim(ClaimTypes.Name, request.Username)
+                new Claim(ClaimTypes.Name, request.Username!)
              };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:SecretKey").Value));
